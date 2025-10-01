@@ -55,5 +55,21 @@ namespace PhotoService.Infrastructure.Repositories
         {
             return await db.SaveChangesAsync() > 0;
         }
+
+        public async Task<List<Photo>> GetPhotosPaginatedAsync(int pageNumber, int pageSize)
+        {
+            return await db.Photos
+                .Include(p => p.PhotoLikes)
+                .Include(p => p.PhotoCategories)
+                .OrderByDescending(p => p.UploadedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTotalPhotoCountAsync()
+        {
+            return await db.Photos.CountAsync();
+        }
     }
 }

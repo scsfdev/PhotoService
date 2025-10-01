@@ -6,14 +6,25 @@ using PhotoService.Domain.Interfaces;
 
 namespace PhotoService.Application.Services
 {
-    public class PhotoServiceImplementation(IPhotoRepository photoRepository, IPhotoLikeRepository photoLikeRepository, 
-        IPhotoCategoryRepository photoCategoryRepository, IMapper mapper) : IPhotoService
+    public class PhotoServiceImplementation(
+        IPhotoRepository photoRepository, 
+        IPhotoLikeRepository photoLikeRepository, 
+        IPhotoCategoryRepository photoCategoryRepository, 
+        IPhotoStorageService photoStorageService,
+        IMapper mapper) : IPhotoService
     {
         // Photo operations ----------------------------------------------------------------------------
         public async Task<IEnumerable<PhotoDto>> GetAllPhotosAsync()
         {
             var photos = await photoRepository.GetAllPhotosAsync();
-            return mapper.Map<IEnumerable<PhotoDto>>(photos);
+            var photoDtos = mapper.Map<IEnumerable<PhotoDto>>(photos);
+
+            foreach (var dto in photoDtos)
+            {
+                dto.Url = photoStorageService.GetPhotoSignedUrl(dto.FileName, 60);
+            }
+
+            return photoDtos;
         }
 
         public async Task<PhotoDto?> GetPhotoByGuidAsync(Guid guid)
@@ -21,7 +32,10 @@ namespace PhotoService.Application.Services
             var photo = await photoRepository.GetPhotoByGuidAsync(guid);
             if(photo == null)
                 return null;
-            return mapper.Map<PhotoDto>(photo);
+
+            var photoDto = mapper.Map<PhotoDto>(photo);
+            photoDto.Url = photoStorageService.GetPhotoSignedUrl(photoDto.FileName, 60);
+            return photoDto;
         }
 
         public async Task<PhotoDto> AddPhotoAsync(PhotoCreateDto photoDto)
@@ -31,11 +45,15 @@ namespace PhotoService.Application.Services
             return mapper.Map<PhotoDto>(photo);
         }
 
-        public async Task<bool> UpdatePhotoAsync(PhotoUpdateDto photoDto)
+        public async Task<bool> UpdatePhotoAsync(PhotoWriteFormDto photoDto)
         {
-            var existingPhoto = await photoRepository.GetPhotoByGuidAsync(photoDto.PhotoGuid);
+            if (!photoDto.PhotoGuid.HasValue)
+                throw new ArgumentException("PhotoGuid is required for update!");
+
+            var existingPhoto = await photoRepository.GetPhotoByGuidAsync(photoDto.PhotoGuid.Value);
             if (existingPhoto == null)
                 return false;
+
             mapper.Map(photoDto, existingPhoto);
 
             return await photoRepository.SaveChangesAsync();
@@ -111,7 +129,21 @@ namespace PhotoService.Application.Services
             return await photoCategoryRepository.DeleteAsync(photoGuid, categoryGuid);
         }
 
-       
+        public async Task<PagedResult<PhotoDto>> GetPhotosPaginatedAsync(int pageNumber, int pageSize)
+        {
+            var photos = await photoRepository.GetPhotosPaginatedAsync(pageNumber, pageSize);
+            var totalCount = await photoRepository.GetTotalPhotoCountAsync();
+
+            return new PagedResult<PhotoDto>
+            {
+                Items = mapper.Map<List<PhotoDto>>(photos),
+                Page = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+        }
+
+
 
         // Photo Category operations ----------------------------------------------------------------------------
     }

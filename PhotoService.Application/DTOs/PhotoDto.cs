@@ -6,9 +6,7 @@ namespace PhotoService.Application.DTOs
         public Guid PhotoGuid { get; set; } 
 
         public required string FileName { get; set; }
-        public required string FilePath { get; set; }
-        public required string MimeType { get; set; }
-
+        public string? Url { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
         public string? Location { get; set; }

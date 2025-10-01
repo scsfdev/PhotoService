@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PhotoService.Application.DTOs;
 using PhotoService.Application.Interfaces;
-using PhotoService.Domain.Entities;
 
 namespace PhotoService.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PhotosController(IPhotoService photoService, IRabbitMqService rabbitMqService, IMapper mapper) : ControllerBase
+    public class PhotosController(IPhotoService photoService, IPhotoStorageService photoStorageService, IRabbitMqService rabbitMqService, IMapper mapper) : ControllerBase
     {
         #region Photos API Endpoints
 
@@ -33,6 +32,72 @@ namespace PhotoService.Api.Controllers
             return Ok(photoDto);
         }
 
+        // POST: api/photos/upsert
+        [HttpPost("upsert")]
+        public async Task<ActionResult<PhotoDto>> UpsertPhoto([FromForm] PhotoWriteFormDto photoWriteFormDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string? fileName = null;
+            if(photoWriteFormDto.File != null && photoWriteFormDto.File.Length > 0)
+            {
+                // File upload to GCS.
+                using var fStream = photoWriteFormDto.File.OpenReadStream();
+                var fileUrl = await photoStorageService.UploadFileAsync(fStream, photoWriteFormDto.File.FileName, photoWriteFormDto.File.ContentType);
+                fileName = photoWriteFormDto.File.FileName;
+            }
+
+            PhotoDto? result;
+
+            if (photoWriteFormDto.PhotoGuid.HasValue)
+            {
+                // Update existing record info.
+                var updated = await photoService.UpdatePhotoAsync(photoWriteFormDto);
+                if (!updated) return NotFound();
+
+                result = await photoService.GetPhotoByGuidAsync(photoWriteFormDto.PhotoGuid.Value);
+                if (result != null)
+                    return Ok(result);
+                else
+                    return BadRequest();
+            }
+            else
+            {
+                // Create new record.
+                if (fileName == null)
+                    return BadRequest("File is required for creating a new photo.");
+
+                var createDto = new PhotoCreateDto
+                {
+                    FileName = fileName,
+                    Title = photoWriteFormDto.Title,
+                    Description = photoWriteFormDto.Description,
+                    Location = photoWriteFormDto.Location,
+                    Country = photoWriteFormDto.Country,
+                    DateTaken = photoWriteFormDto.DateTaken
+                };
+
+                var created = await photoService.AddPhotoAsync(createDto);
+                result = mapper.Map<PhotoDto>(created);
+                return CreatedAtAction(nameof(GetPhotoByGuid), new { photoGuid = result.PhotoGuid }, result);
+            }
+        }
+
+        
+        // DELETE: api/photos/{photoGuid}
+        [HttpDelete("{photoGuid:guid}")]
+        public async Task<IActionResult> DeletePhoto(Guid photoGuid)
+        {
+            var result = await photoService.DeletePhotoAsync(photoGuid);
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
+
+
+        /* Combine below 3 into one as 'UpsertPhoto' EndPoint.
         // POST: api/photos
         [HttpPost]
         public async Task<ActionResult<PhotoDto>> CreatePhoto([FromBody] PhotoCreateDto photoDto)
@@ -44,7 +109,7 @@ namespace PhotoService.Api.Controllers
 
         // PUT: api/photos/{photoGuid}
         [HttpPut("{photoGuid:guid}")]
-        public async Task<IActionResult> UpdatePhoto(Guid photoGuid, [FromBody] PhotoUpdateDto photoDto)
+        public async Task<IActionResult> UpdatePhoto(Guid photoGuid, [FromBody] PhotoWriteFormDto photoDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -59,16 +124,19 @@ namespace PhotoService.Api.Controllers
             return NoContent();
         }
 
-        // DELETE: api/photos/{photoGuid}
-        [HttpDelete("{photoGuid:guid}")]
-        public async Task<IActionResult> DeletePhoto(Guid photoGuid)
+        [HttpPost("upload")]
+        public async Task<IActionResult> Upload([FromForm] IFormFile file)
         {
-            var result = await photoService.DeletePhotoAsync(photoGuid);
-            if (!result)
-                return NotFound();
+            if (file == null || file.Length == 0)
+                return BadRequest("No file provided!");
 
-            return NoContent();
+            using var fStream = file.OpenReadStream();
+            var fileUrl = await photoStorageService.UploadFileAsync(fStream, file.FileName, file.ContentType);
+
+            return Ok(new { Url = fileUrl });
         }
+        */
+
 
         #endregion
 

@@ -9,7 +9,7 @@ namespace PhotoService.Application.Interfaces
         Task<PhotoDto?> GetPhotoByGuidAsync(Guid guid);
 
         Task<PhotoDto> AddPhotoAsync(PhotoCreateDto photo);
-        Task<bool> UpdatePhotoAsync(PhotoUpdateDto photo);
+        Task<bool> UpdatePhotoAsync(PhotoWriteFormDto photo);
         Task<bool> DeletePhotoAsync(Guid photoGuid);
 
         Task<PhotoLikeDto> LikePhotoAsync(Guid photoGuid, Guid userGuid);
@@ -20,5 +20,9 @@ namespace PhotoService.Application.Interfaces
 
         Task<bool> CreatePhotoCategoryAsync(PhotoCategoryDto photoCategory);
         Task<bool> DeletePhotoCategoryAsync(Guid photoGuid, Guid categoryGuid);
+
+        Task<PagedResult<PhotoDto>> GetPhotosPaginatedAsync(int pageNumber, int pageSize);
     }
+
+
 }

@@ -7,8 +7,12 @@ namespace PhotoService.Domain.Entities
         public Guid PhotoGuid { get; set; } = Guid.NewGuid();
 
         public required string FileName { get; set; }
-        public required string FilePath { get; set; }
-        public required string MimeType { get; set; }
+        
+        // Remove this local path demo and switch to GCS bucket to simulate real world situation.
+        //public required string FilePath { get; set; }
+
+        // Since all will be image, no need to separately keep MimeType.
+        //public required string MimeType { get; set; }
 
         public string? Title { get; set; }
         public string? Description { get; set; }

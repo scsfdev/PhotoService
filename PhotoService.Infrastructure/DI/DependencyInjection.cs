@@ -23,6 +23,8 @@ namespace PhotoService.Infrastructure.DI
             services.AddScoped<IPhotoLikeRepository, PhotoLikeRepository>();
             services.AddScoped<IPhotoCategoryRepository, PhotoCategoryRepository>();
             services.AddScoped<IPhotoService, PhotoServiceImplementation>();
+            services.AddScoped<IStorageService, GCSService>();
+            services.AddScoped<IPhotoStorageService, PhotoStorageService>();
 
             // RabbitMQ service
             var loggerFactory = LoggerFactory.Create(builder =>

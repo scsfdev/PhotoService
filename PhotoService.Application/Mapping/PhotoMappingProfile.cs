@@ -13,10 +13,10 @@ namespace PhotoService.Application.Mapping
                 .ForAllMembers(opts => opts.Condition((src, dest,srcMember) => srcMember != null));
 
             // Output > Read: Entity to Dto.
-            CreateMap<Photo, PhotoDto>();
+            CreateMap<Photo, PhotoDto>().ForMember(dest => dest.Url, opt => opt.Ignore());
 
             // Input > Update: Dto to Entity.
-            CreateMap<PhotoUpdateDto, Photo>()
+            CreateMap<PhotoWriteFormDto, Photo>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Output > Read: Entity to Dto.

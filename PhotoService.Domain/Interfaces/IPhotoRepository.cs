@@ -12,5 +12,7 @@ namespace PhotoService.Domain.Interfaces
         Task<bool> DeletePhotoAsync(Photo photo);
         Task<bool> SaveChangesAsync();
         Task IncrementLikesAsync(Guid photoGuid);
+        Task<List<Photo>> GetPhotosPaginatedAsync(int pageNumber, int pageSize);
+        Task<int> GetTotalPhotoCountAsync();
     }
 }

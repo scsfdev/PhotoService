@@ -10,8 +10,8 @@ namespace PhotoService.Infrastructure.Services
 {
     public class RabbitMqService(ILogger<RabbitMqService> logger) : IRabbitMqService, IAsyncDisposable
     {
-        private IConnection connection;
-        private IChannel channel;
+        private IConnection connection = null!;
+        private IChannel channel = null!;
 
         private readonly string requestQueue = "validate_category_request";
         private readonly string responseQueue = "validate_category_response";
