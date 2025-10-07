@@ -482,6 +482,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Ignore local app setting and Test projects.
 PhotoService.Api/appsettings.json
-/PhotoService.IntegrationTests/PhotoService.IntegrationTests.csproj
-/PhotoService.UnitTests/PhotoService.UnitTests.csproj
+PhotoService.UnitTests/
+PhotoService.IntegrationTests/
