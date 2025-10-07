@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PhotoService.Application.Interfaces;
+using PhotoService.Infrastructure.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -8,7 +10,7 @@ using ValidateCategoryEvents;
 
 namespace PhotoService.Infrastructure.Services
 {
-    public class RabbitMqService(ILogger<RabbitMqService> logger) : IRabbitMqService, IAsyncDisposable
+    public class RabbitMqService(IOptions<RabbitMQSettings> rbMQoptions, ILogger<RabbitMqService> logger) : IRabbitMqService, IAsyncDisposable
     {
         private IConnection connection = null!;
         private IChannel channel = null!;
@@ -23,10 +25,10 @@ namespace PhotoService.Infrastructure.Services
             // Initialize RabbitMQ connection here
             var factory = new ConnectionFactory()
             {
-                HostName = "localhost", // Replace with your RabbitMQ server hostname
-                Port = 5672,            // Replace with your RabbitMQ server port
-                UserName = "guest",     // Replace with your RabbitMQ username
-                Password = "guest"      // Replace with your RabbitMQ password
+                HostName = rbMQoptions.Value.HostName,
+                Port = rbMQoptions.Value.Port,            
+                UserName = rbMQoptions.Value.UserName,
+                Password = rbMQoptions.Value.Password
             };
 
             connection = await factory.CreateConnectionAsync();

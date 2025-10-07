@@ -13,6 +13,8 @@ namespace PhotoService.Application.DTOs
 
         public DateTime? DateTaken { get; set; }
 
+        public ICollection<Guid> CategoryGuids { get; set; } = [];
+
         // File for upload
         public IFormFile? File { get; set; }    // null = No upload action, not null = Upload to GCS.
     }

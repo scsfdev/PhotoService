@@ -7,6 +7,6 @@ namespace PhotoService.Domain.Interfaces
         Task<IEnumerable<PhotoCategory>> GetByPhotoGuidAsync(Guid photoGuid);
 
         Task<bool> CreateAsync(PhotoCategory photoCategory);
-        Task<bool> DeleteAsync(Guid photoGuid, Guid categoryGuid);
+        Task<bool> DeleteAsync(Guid photoGuid);
     }
 }

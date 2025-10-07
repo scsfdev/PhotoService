@@ -7,11 +7,19 @@ namespace PhotoService.Infrastructure.Repositories
 {
     public class PhotoRepository(PhotoDbContext db) : IPhotoRepository
     {
-        public async Task<IEnumerable<Photo>> GetAllPhotosAsync() => await db.Photos.Include(p=>p.PhotoLikes).Include(p=>p.PhotoCategories).ToListAsync();
+        public async Task<IEnumerable<Photo>> GetAllPhotosAsync() => 
+            await db.Photos
+            .Include(p=>p.PhotoLikes)
+            .Include(p=>p.PhotoCategories)
+            .AsSplitQuery()
+            .ToListAsync();
 
         public async Task<Photo?> GetPhotoByGuidAsync(Guid guid)
         {
-            return await db.Photos.Include(p => p.PhotoLikes).Include(p => p.PhotoCategories).FirstOrDefaultAsync(p => p.PhotoGuid == guid);
+            return await db.Photos.Include(p => p.PhotoLikes)
+                .Include(p => p.PhotoCategories)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(p => p.PhotoGuid == guid);
         }
 
 

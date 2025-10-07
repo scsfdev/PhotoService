@@ -19,7 +19,7 @@ namespace PhotoService.Application.Interfaces
         Task<IEnumerable<PhotoCategoryDto>> GetPhotoCategoryByPhotoGuidAsync(Guid photoGuid);
 
         Task<bool> CreatePhotoCategoryAsync(PhotoCategoryDto photoCategory);
-        Task<bool> DeletePhotoCategoryAsync(Guid photoGuid, Guid categoryGuid);
+        Task<bool> DeletePhotoCategoryAsync(Guid photoGuid);
 
         Task<PagedResult<PhotoDto>> GetPhotosPaginatedAsync(int pageNumber, int pageSize);
     }

@@ -49,6 +49,8 @@ namespace PhotoService.Api.Controllers
             }
 
             PhotoDto? result;
+            Guid photoGuid;
+
 
             if (photoWriteFormDto.PhotoGuid.HasValue)
             {
@@ -57,10 +59,11 @@ namespace PhotoService.Api.Controllers
                 if (!updated) return NotFound();
 
                 result = await photoService.GetPhotoByGuidAsync(photoWriteFormDto.PhotoGuid.Value);
-                if (result != null)
-                    return Ok(result);
-                else
+                if (result == null)
                     return BadRequest();
+
+                //return Ok(result);
+                photoGuid = result.PhotoGuid;
             }
             else
             {
@@ -80,8 +83,37 @@ namespace PhotoService.Api.Controllers
 
                 var created = await photoService.AddPhotoAsync(createDto);
                 result = mapper.Map<PhotoDto>(created);
-                return CreatedAtAction(nameof(GetPhotoByGuid), new { photoGuid = result.PhotoGuid }, result);
+                photoGuid = result.PhotoGuid;
+                // return CreatedAtAction(nameof(GetPhotoByGuid), new { photoGuid = result.PhotoGuid }, result);
             }
+
+            // Category section.
+            if (photoWriteFormDto.CategoryGuids != null && photoWriteFormDto.CategoryGuids.Any())
+            {
+                // Remove existing link (Photo <=> Category).
+                await photoService.DeletePhotoCategoryAsync(photoGuid);
+
+                foreach (var catId in photoWriteFormDto.CategoryGuids)
+                {
+                    // RabbitMQ validation.
+                    // Validate Category Guid is valid or not via RabbitMQ to CategoryService before tagging it to Photo.
+                    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    bool isValid = await rabbitMqService.ValidateCategoryAsync(catId, cts.Token);
+
+                    if (!isValid)
+                        return BadRequest("Invalid Category!");
+
+                    // If pass, proceed to next step.
+                    var added = await photoService.CreatePhotoCategoryAsync(new PhotoCategoryDto { PhotoGuid = photoGuid, CategoryGuid = catId });
+                    if (!added)
+                        return BadRequest("Could not add category to photo.");
+                }
+            }
+
+            // Return result.
+            return photoWriteFormDto.PhotoGuid.HasValue
+                ? Ok(result)
+                : CreatedAtAction(nameof(GetPhotoByGuid), new { photoGuid = result.PhotoGuid }, result);
         }
 
         
@@ -188,6 +220,9 @@ namespace PhotoService.Api.Controllers
             return Ok(photoCategoriesDto);
         }
 
+
+        // Maintain it for RabbitMQ Event Broker. In case other services want to call PhotoService directly.
+        // For my BFF design pattern, I will skip RabbitMQ.
         // POST: api/photos/{photoGuid}/categories
         [HttpPost("{photoGuid:guid}/categories")]
         public async Task<IActionResult> AddCategoryToPhoto(Guid photoGuid, [FromBody] PhotoCategoryDto photoCategoryDto)
@@ -213,11 +248,11 @@ namespace PhotoService.Api.Controllers
             return NoContent();
         }
 
-        // DELETE: api/photos/{photoGuid}/categories/{categoryGuid}
-        [HttpDelete("{photoGuid:guid}/categories/{categoryGuid:guid}")]
-        public async Task<IActionResult> RemoveCategoryFromPhoto(Guid photoGuid, Guid categoryGuid)
+        // DELETE: api/photos/categories/{photoGuid}
+        [HttpDelete("{photoGuid:guid}/categories")]
+        public async Task<IActionResult> RemoveCategoryFromPhoto(Guid photoGuid)
         {
-            var result = await photoService.DeletePhotoCategoryAsync(photoGuid, categoryGuid);
+            var result = await photoService.DeletePhotoCategoryAsync(photoGuid);
             if (!result)
                 return NotFound();
             return NoContent();

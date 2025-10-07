@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PhotoService.Application.Interfaces;
 using PhotoService.Application.Services;
 using PhotoService.Domain.Interfaces;
+using PhotoService.Infrastructure.Configuration;
 using PhotoService.Infrastructure.Data;
 using PhotoService.Infrastructure.Repositories;
 using PhotoService.Infrastructure.Services;
@@ -12,7 +14,10 @@ namespace PhotoService.Infrastructure.DI
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, ILoggingBuilder logging)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, 
+            string connectionString,
+            IConfigurationSection configSec,
+            ILoggingBuilder logging)
         {
             // Configure EF Core DbContext
             services.AddDbContext<PhotoDbContext>(options =>
@@ -32,16 +37,20 @@ namespace PhotoService.Infrastructure.DI
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
-           // var rabbitMqService = new RabbitMqService(loggerFactory.CreateLogger<RabbitMqService>());
-           // rabbitMqService.InitializeAsync().GetAwaiter().GetResult();
-            // services.AddSingleton<IRabbitMqService, RabbitMqService>();
-            services.AddSingleton<IRabbitMqService>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<RabbitMqService>>();
-                var service = new RabbitMqService(logger);
-                service.InitializeAsync().GetAwaiter().GetResult();
-                return service;
-            });
+
+
+            // For RabbitMQSettings class, register it with the DI container.
+            services.Configure<RabbitMQSettings>(configSec);
+
+            services.AddSingleton<IRabbitMqService, RabbitMqService>();
+
+            //services.AddSingleton<IRabbitMqService>(sp =>
+            //{
+            //    var logger = sp.GetRequiredService<ILogger<RabbitMqService>>();
+            //    var service = new RabbitMqService(logger);
+            //    service.InitializeAsync().GetAwaiter().GetResult();
+            //    return service;
+            //});
 
             return services;
         }

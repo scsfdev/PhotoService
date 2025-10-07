@@ -483,3 +483,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 PhotoService.Api/appsettings.json
+/PhotoService.IntegrationTests/PhotoService.IntegrationTests.csproj
+/PhotoService.UnitTests/PhotoService.UnitTests.csproj

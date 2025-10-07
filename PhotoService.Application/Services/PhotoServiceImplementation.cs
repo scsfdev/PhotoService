@@ -124,9 +124,9 @@ namespace PhotoService.Application.Services
             return await photoCategoryRepository.CreateAsync(photoCategory);
         }
 
-        public async Task<bool> DeletePhotoCategoryAsync(Guid photoGuid, Guid categoryGuid)
+        public async Task<bool> DeletePhotoCategoryAsync(Guid photoGuid)
         {
-            return await photoCategoryRepository.DeleteAsync(photoGuid, categoryGuid);
+            return await photoCategoryRepository.DeleteAsync(photoGuid);
         }
 
         public async Task<PagedResult<PhotoDto>> GetPhotosPaginatedAsync(int pageNumber, int pageSize)

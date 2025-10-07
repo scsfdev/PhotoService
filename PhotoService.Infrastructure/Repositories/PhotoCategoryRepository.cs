@@ -18,15 +18,20 @@ namespace PhotoService.Infrastructure.Repositories
             return await db.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> DeleteAsync(Guid photoGuid, Guid categoryGuid)
+        public async Task<bool> DeleteAsync(Guid photoGuid)
         {
-            var photoCategory = db.PhotoCategories.FirstOrDefault(pc => pc.PhotoGuid == photoGuid && pc.CategoryGuid == categoryGuid);
-            if(photoCategory != null)
+            var existingPhotoCategories = db.PhotoCategories.Where(pc => pc.PhotoGuid == photoGuid);
+
+            if (existingPhotoCategories.Any())
             {
-                db.PhotoCategories.Remove(photoCategory);
+                // If got data, clear it.
+                db.PhotoCategories.RemoveRange(existingPhotoCategories);
+
+                return await db.SaveChangesAsync() > 0;
             }
 
-            return await db.SaveChangesAsync() > 0;
+            // Regardless of empty or not empty, return true.
+            return true;
         }
     }
 }
