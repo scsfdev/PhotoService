@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PhotoService.Application.DTOs;
@@ -33,6 +34,7 @@ namespace PhotoService.Api.Controllers
         }
 
         // POST: api/photos/upsert
+        [Authorize(Roles = "Admin")]
         [HttpPost("upsert")]
         public async Task<ActionResult<PhotoDto>> UpsertPhoto([FromForm] PhotoWriteFormDto photoWriteFormDto)
         {
@@ -116,8 +118,9 @@ namespace PhotoService.Api.Controllers
                 : CreatedAtAction(nameof(GetPhotoByGuid), new { photoGuid = result.PhotoGuid }, result);
         }
 
-        
+
         // DELETE: api/photos/{photoGuid}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{photoGuid:guid}")]
         public async Task<IActionResult> DeletePhoto(Guid photoGuid)
         {
@@ -178,6 +181,7 @@ namespace PhotoService.Api.Controllers
         #region PhotoLike API Endpoints
 
         // POST: api/photos/{photoGuid}/like/{userGuid}
+        [Authorize]
         [HttpPost("{photoGuid:guid}/like/{userGuid:guid}")]
         public async Task<ActionResult<PhotoLikeDto>> LikePhoto(Guid photoGuid, Guid userGuid)
         {
@@ -191,6 +195,7 @@ namespace PhotoService.Api.Controllers
         }
 
         // DELETE: api/photos/{photoGuid}/like/{userGuid}
+        [Authorize]
         [HttpDelete("{photoGuid:guid}/like/{userGuid:guid}")]
         public async Task<IActionResult> UnlikePhoto(Guid photoGuid, Guid userGuid)
         {
@@ -224,6 +229,7 @@ namespace PhotoService.Api.Controllers
         // Maintain it for RabbitMQ Event Broker. In case other services want to call PhotoService directly.
         // For my BFF design pattern, I will skip RabbitMQ.
         // POST: api/photos/{photoGuid}/categories
+        [Authorize(Roles = "Admin")]
         [HttpPost("{photoGuid:guid}/categories")]
         public async Task<IActionResult> AddCategoryToPhoto(Guid photoGuid, [FromBody] PhotoCategoryDto photoCategoryDto)
         {
@@ -249,6 +255,7 @@ namespace PhotoService.Api.Controllers
         }
 
         // DELETE: api/photos/categories/{photoGuid}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{photoGuid:guid}/categories")]
         public async Task<IActionResult> RemoveCategoryFromPhoto(Guid photoGuid)
         {
@@ -259,9 +266,6 @@ namespace PhotoService.Api.Controllers
         }
 
         #endregion
-
-
-
 
 
     }
