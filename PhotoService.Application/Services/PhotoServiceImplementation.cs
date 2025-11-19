@@ -56,6 +56,30 @@ namespace PhotoService.Application.Services
 
             mapper.Map(photoDto, existingPhoto);
 
+            // Manually reconcile the many-to-many relationship
+            var currentCategoryGuids = existingPhoto.PhotoCategories.Select(pc => pc.CategoryGuid).ToHashSet();
+            var desiredCategoryGuids = photoDto.CategoryGuids.ToHashSet();
+
+            // Items to ADD (Guids in DTO but not currently linked)
+            var categoriesToAdd = desiredCategoryGuids.Except(currentCategoryGuids)
+                .Select(guid => new PhotoCategory { PhotoGuid = existingPhoto.PhotoGuid, CategoryGuid = guid })
+                .ToList();
+
+            // Items to REMOVE (Guids currently linked but missing from DTO)
+            var categoriesToRemove = existingPhoto.PhotoCategories
+                .Where(pc => !desiredCategoryGuids.Contains(pc.CategoryGuid))
+                .ToList();
+
+            // Apply changes to the tracked entity
+            foreach (var category in categoriesToRemove)
+            {
+                existingPhoto.PhotoCategories.Remove(category);
+            }
+            foreach (var category in categoriesToAdd)
+            {
+                existingPhoto.PhotoCategories.Add(category);
+            }
+
             return await photoRepository.SaveChangesAsync();
         }
 

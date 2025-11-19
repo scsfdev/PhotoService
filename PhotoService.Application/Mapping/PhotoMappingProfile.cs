@@ -16,8 +16,9 @@ namespace PhotoService.Application.Mapping
             CreateMap<Photo, PhotoDto>().ForMember(dest => dest.Url, opt => opt.Ignore());
 
             // Input > Update: Dto to Entity.
-            CreateMap<PhotoWriteFormDto, Photo>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            var mappingExpression = CreateMap<PhotoWriteFormDto, Photo>();
+            mappingExpression.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            mappingExpression.ForMember(dest => dest.PhotoCategories, opt => opt.Ignore());
 
             // Output > Read: Entity to Dto.
             CreateMap<PhotoLike, PhotoLikeDto>();
