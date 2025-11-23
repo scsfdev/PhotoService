@@ -7,12 +7,25 @@ namespace PhotoService.Infrastructure.Repositories
 {
     public class PhotoRepository(PhotoDbContext db) : IPhotoRepository
     {
-        public async Task<IEnumerable<Photo>> GetAllPhotosAsync() => 
-            await db.Photos
-            .Include(p=>p.PhotoLikes)
-            .Include(p=>p.PhotoCategories)
-            .AsSplitQuery()
-            .ToListAsync();
+        public async Task<IEnumerable<Photo>> GetAllPhotosAsync(Guid? categoryGuid)
+        {
+            // Query all necessary includes and AsSplitQuery
+            IQueryable<Photo> query = db.Photos
+                .Include(p => p.PhotoLikes)
+                .Include(p => p.PhotoCategories)
+                .AsSplitQuery();
+
+            // Apply category filter if provided
+            if (categoryGuid.HasValue)
+            {
+                query = query.Where(p =>
+                    p.PhotoCategories.Any(pc => pc.CategoryGuid == categoryGuid.Value)
+                );
+            }
+
+            // Execute the query and return results
+            return await query.ToListAsync();
+        }
 
         public async Task<Photo?> GetPhotoByGuidAsync(Guid guid)
         {
@@ -79,5 +92,6 @@ namespace PhotoService.Infrastructure.Repositories
         {
             return await db.Photos.CountAsync();
         }
+
     }
 }

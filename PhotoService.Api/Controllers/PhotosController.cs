@@ -15,9 +15,9 @@ namespace PhotoService.Api.Controllers
 
         // GET: api/photos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PhotoDto>>> GetAllPhotos()
+        public async Task<ActionResult<IEnumerable<PhotoDto>>> GetAllPhotos(Guid? categoryGuid)
         {
-            var photos = await photoService.GetAllPhotosAsync();
+            var photos = await photoService.GetAllPhotosAsync(categoryGuid);
             var photosDto = mapper.Map<IEnumerable<PhotoDto>>(photos);
             return Ok(photosDto);
         }
@@ -34,7 +34,7 @@ namespace PhotoService.Api.Controllers
         }
 
         // POST: api/photos/upsert
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPost("upsert")]
         public async Task<ActionResult<PhotoDto>> UpsertPhoto([FromForm] PhotoWriteFormDto photoWriteFormDto)
         {

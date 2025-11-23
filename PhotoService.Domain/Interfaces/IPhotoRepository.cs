@@ -4,7 +4,7 @@ namespace PhotoService.Domain.Interfaces
 {
     public interface IPhotoRepository
     {
-        Task<IEnumerable<Photo>> GetAllPhotosAsync();
+        Task<IEnumerable<Photo>> GetAllPhotosAsync(Guid? categoryGuid);
         Task<Photo?> GetPhotoByGuidAsync(Guid guid);
 
         Task<Photo> AddPhotoAsync(Photo photo);

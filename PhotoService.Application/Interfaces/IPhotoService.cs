@@ -5,7 +5,7 @@ namespace PhotoService.Application.Interfaces
 {
     public interface IPhotoService
     {
-        Task<IEnumerable<PhotoDto>> GetAllPhotosAsync();
+        Task<IEnumerable<PhotoDto>> GetAllPhotosAsync(Guid? categoryGuid);
         Task<PhotoDto?> GetPhotoByGuidAsync(Guid guid);
 
         Task<PhotoDto> AddPhotoAsync(PhotoCreateDto photo);
